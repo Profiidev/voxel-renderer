@@ -11,7 +11,10 @@ mod voxel;
 
 fn main() {
   App::new()
-    .add_plugins(DefaultPlugins)
+    .add_plugins(DefaultPlugins.set(AssetPlugin {
+      watch_for_changes_override: Some(true),
+      ..Default::default()
+    }))
     .add_plugins(CameraControllerPlugin)
     .add_plugins(WireframePlugin::default())
     .add_plugins(VoxelPlugin)
@@ -28,12 +31,12 @@ fn setup(
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-  if false {
+  if true {
     // cube
     commands.spawn((
       Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
       MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
-      Transform::from_xyz(0.0, 0.5, 0.0),
+      Transform::from_xyz(8.0, 10.0, 8.0),
     ));
   }
   // light
@@ -47,6 +50,6 @@ fn setup(
   // camera
   commands.spawn((
     camera::camera_components(),
-    Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
+    Transform::from_xyz(-2.5, 12.5, 9.0).looking_at(Vec3::new(8.0, 10.0, 8.0), Vec3::Y),
   ));
 }

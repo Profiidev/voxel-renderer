@@ -12,7 +12,11 @@ use bevy::{
 use noise::{NoiseFn, Perlin};
 
 const CHUNK_SIZE: usize = 16;
+const CHUNK_SIZE_POW: usize = 5; // log2(32) = 5, plus 1 for first bit
+
 const SHADER_PATH: &str = "shaders/chunk.wgsl";
+const PREPASS_SHADER_PATH: &str = "shaders/chunk_prepass.wgsl";
+
 pub const DATA_ATTRIBUTE: MeshVertexAttribute =
   MeshVertexAttribute::new("Quad data", 658854091321, VertexFormat::Uint32);
 
@@ -61,8 +65,9 @@ impl ChunkData {
 
   pub fn mesh(self) -> Mesh {
     let mut plain_data = Vec::new();
-    let mut positions = Vec::new();
     let mut indices = Vec::new();
+
+    let chunk_size_mask: u32 = (1 << CHUNK_SIZE_POW) - 1;
 
     for x in 1..CHUNK_SIZE + 1 {
       for y in 1..CHUNK_SIZE + 1 {
@@ -98,7 +103,7 @@ impl ChunkData {
                 _ => unreachable!(),
               };
 
-              let start_index = positions.len() as u32;
+              let start_index = plain_data.len() as u32;
               indices.push(start_index);
               if dir == 2 || dir == 5 || dir == 0 {
                 indices.push(start_index + 3);
@@ -123,11 +128,6 @@ impl ChunkData {
                 };
 
                 let vertex_pos = base + offset;
-                positions.push([
-                  vertex_pos.x as f32,
-                  vertex_pos.y as f32,
-                  vertex_pos.z as f32,
-                ]);
 
                 let x = vertex_pos.x as u32;
                 let y = vertex_pos.y as u32;
@@ -135,12 +135,12 @@ impl ChunkData {
                 let width = 1;
                 let height = 1;
 
-                let data: u32 = (x & 0x1F << 27)
-                  | ((y & 0x1F) << 22)
-                  | ((z & 0x1F) << 17)
-                  | ((width & 0x1F) << 12)
-                  | ((height & 0x1F) << 7)
-                  | (dir & 0x07);
+                let data: u32 = (x & chunk_size_mask) << (32 - CHUNK_SIZE_POW)
+                  | ((y & chunk_size_mask) << (32 - 2 * CHUNK_SIZE_POW))
+                  | ((z & chunk_size_mask) << (32 - 3 * CHUNK_SIZE_POW))
+                  | ((width & chunk_size_mask) << (32 - 4 * CHUNK_SIZE_POW))
+                  | ((height & chunk_size_mask) << (32 - 5 * CHUNK_SIZE_POW))
+                  | (dir & 7);
 
                 plain_data.push(data);
               }
@@ -155,7 +155,6 @@ impl ChunkData {
       RenderAssetUsages::RENDER_WORLD,
     );
 
-    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
     mesh.insert_attribute(DATA_ATTRIBUTE, plain_data);
     mesh.insert_indices(Indices::U32(indices));
 
@@ -190,12 +189,19 @@ impl Material for ChunkMaterial {
     layout: &MeshVertexBufferLayoutRef,
     _key: MaterialPipelineKey<Self>,
   ) -> Result<(), SpecializedMeshPipelineError> {
-    let vertex_layout = layout.0.get_layout(&[
-      Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
-      DATA_ATTRIBUTE.at_shader_location(1),
-    ])?;
+    let vertex_layout = layout
+      .0
+      .get_layout(&[DATA_ATTRIBUTE.at_shader_location(0)])?;
 
     descriptor.vertex.buffers = vec![vertex_layout];
     Ok(())
+  }
+
+  fn prepass_vertex_shader() -> ShaderRef {
+    PREPASS_SHADER_PATH.into()
+  }
+
+  fn prepass_fragment_shader() -> ShaderRef {
+    PREPASS_SHADER_PATH.into()
   }
 }

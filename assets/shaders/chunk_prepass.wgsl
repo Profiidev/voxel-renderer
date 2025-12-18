@@ -1,8 +1,7 @@
-#import bevy_pbr::{
-    mesh_functions::{mesh_position_local_to_clip, get_world_from_local, mesh_normal_local_to_world},
-    prepass_io::{FragmentOutput},
-}
-#import "shaders/chunk_util.wgsl"::{UnpackedData, Vertex, unpack, normals}
+#import bevy_pbr::mesh_functions::{mesh_position_local_to_world, get_world_from_local, mesh_normal_local_to_world};
+#import bevy_pbr::prepass_io::FragmentOutput;
+#import bevy_pbr::view_transformations::position_world_to_clip;
+#import "shaders/chunk_util.wgsl"::{Vertex, unpack}
 
 #ifdef DEFERRED_PREPASS
 #import bevy_pbr::rgb9e5
@@ -16,15 +15,16 @@ struct VertexOutput {
 
 @vertex
 fn vertex(vertex: Vertex) -> VertexOutput {
+    let data = unpack(vertex.data);
     var out: VertexOutput;
 
-    let data = unpack(vertex.data);
-    let normal = normals[data.direction];
-
-    out.world_normal = mesh_normal_local_to_world(normal, vertex.instance_index);
-
-    var model = get_world_from_local(vertex.instance_index);
-    out.position = mesh_position_local_to_clip(model, data.position);
+    let world_to_local = get_world_from_local(vertex.instance_index);
+    let world_position = mesh_position_local_to_world(
+        world_to_local,
+        data.position
+    );
+    out.world_normal = mesh_normal_local_to_world(data.normal, vertex.instance_index);
+    out.position = position_world_to_clip(world_position.xyz);
 
     return out;
 }

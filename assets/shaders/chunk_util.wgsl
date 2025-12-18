@@ -1,5 +1,6 @@
 struct UnpackedData {
   position: vec4<f32>,
+  normal: vec3<f32>,
   height: f32,
   width: f32,
   direction: u32,
@@ -14,21 +15,23 @@ fn unpack(data: u32) -> UnpackedData {
   let height: f32 = f32((data >> 7) & 0x1F);
   let direction: u32 = data & 7;
 
+  let normal: vec3<f32> = normals[direction];
+
   return UnpackedData(vec4<f32>(
     x,
     y,
     z,
     1.0,
-  ), height, width, direction);
+  ), normal, height, width, direction);
 }
 
 const normals: array<vec3<f32>,6> = array<vec3<f32>,6> (
-	vec3<f32>(-1.0, 0.0, 0.0), // Left
-	vec3<f32>(1.0, 0.0, 0.0), // Right
-	vec3<f32>(0.0, -1.0, 0.0), // Down
-	vec3<f32>(0.0, 1.0, 0.0), // Up
-	vec3<f32>(0.0, 0.0, -1.0), // Back
-	vec3<f32>(0.0, 0.0, 1.0) // Forward
+	vec3<f32>(1.0, 0.0, 0.0), // Left
+	vec3<f32>(-1.0, 0.0, 0.0), // Right
+	vec3<f32>(0.0, 1.0, 0.0), // Down
+	vec3<f32>(0.0, -1.0, 0.0), // Up
+	vec3<f32>(0.0, 0.0, 1.0), // Back
+	vec3<f32>(0.0, 0.0, -1.0) // Forward
 );
 
 struct Vertex {

@@ -6,7 +6,7 @@ use bevy::{
   },
   pbr::{MaterialPipeline, MaterialPipelineKey},
   prelude::*,
-  render::render_resource::{AsBindGroup, PolygonMode, RenderPipelineDescriptor, SpecializedMeshPipelineError},
+  render::render_resource::{AsBindGroup, RenderPipelineDescriptor, SpecializedMeshPipelineError},
   shader::ShaderRef,
 };
 use noise::{NoiseFn, Perlin};
@@ -197,7 +197,6 @@ impl Material for ChunkMaterial {
       .0
       .get_layout(&[DATA_ATTRIBUTE.at_shader_location(0)])?;
 
-    descriptor.primitive.polygon_mode = PolygonMode::Line;
     descriptor.vertex.buffers = vec![vertex_layout];
     Ok(())
   }

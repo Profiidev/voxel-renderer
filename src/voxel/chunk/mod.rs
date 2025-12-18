@@ -1,11 +1,9 @@
 use bevy::prelude::*;
 pub use material::ChunkMaterialPlugin;
 
-use crate::voxel::chunk::{
-  generation::ChunkBlockData,
-  material::{ChunkMaterial, ChunkMaterialHandle},
-};
+use crate::voxel::chunk::{generation::ChunkBlockData, material::ChunkMaterial};
 
+mod entity;
 mod generation;
 mod material;
 mod mesh;
@@ -26,14 +24,10 @@ pub fn test(
     commands.entity(entity).despawn();
   }
 
-  let mesh = ChunkBlockData::create(42, IVec3::ZERO).mesh();
-  let material = materials.add(ChunkMaterial {});
-  commands.insert_resource(ChunkMaterialHandle(material.clone()));
+  let chunk_pos = IVec3::new(0, 0, 0);
+  let mesh_entity = ChunkBlockData::create(42, chunk_pos)
+    .create_mesh()
+    .create_entity(&mut materials, &mut meshes, &mut commands);
 
-  commands.spawn((
-    Transform::from_xyz(0.0, 0.0, 0.0),
-    Mesh3d(meshes.add(mesh)),
-    MeshMaterial3d(material),
-    Marker,
-  ));
+  commands.spawn((Marker, mesh_entity));
 }

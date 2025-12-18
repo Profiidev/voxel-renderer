@@ -9,8 +9,13 @@ use bevy::{
 pub const DATA_ATTRIBUTE: MeshVertexAttribute =
   MeshVertexAttribute::new("Quad data", 658854091321, VertexFormat::Uint32);
 
+pub struct ChunkMeshData {
+  pub mesh: Mesh,
+  pub chunk_pos: IVec3,
+}
+
 impl ChunkBlockData {
-  pub fn mesh(self) -> Mesh {
+  pub fn create_mesh(self) -> ChunkMeshData {
     let mut plain_data = Vec::new();
     let mut indices = Vec::new();
 
@@ -105,6 +110,9 @@ impl ChunkBlockData {
     mesh.insert_attribute(DATA_ATTRIBUTE, plain_data);
     mesh.insert_indices(Indices::U32(indices));
 
-    mesh
+    ChunkMeshData {
+      mesh,
+      chunk_pos: self.chunk_pos,
+    }
   }
 }

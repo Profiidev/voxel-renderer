@@ -16,13 +16,9 @@ fn unpack(data: u32) -> UnpackedData {
   let direction: u32 = data & 7;
 
   let normal: vec3<f32> = normals[direction];
+  let position = vec4<f32>(x, y, z, 1.0);
 
-  return UnpackedData(vec4<f32>(
-    x,
-    y,
-    z,
-    1.0,
-  ), normal, height, width, direction);
+  return UnpackedData(position, normal, height, width, direction);
 }
 
 const normals: array<vec3<f32>,6> = array<vec3<f32>,6> (

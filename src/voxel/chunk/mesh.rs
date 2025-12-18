@@ -1,68 +1,15 @@
+use crate::voxel::chunk::{CHUNK_SIZE, CHUNK_SIZE_POW, generation::ChunkBlockData};
 use bevy::{
   asset::RenderAssetUsages,
   math::USizeVec3,
-  mesh::{
-    Indices, MeshVertexAttribute, MeshVertexBufferLayoutRef, PrimitiveTopology, VertexFormat,
-  },
-  pbr::{MaterialPipeline, MaterialPipelineKey},
+  mesh::{Indices, MeshVertexAttribute, PrimitiveTopology, VertexFormat},
   prelude::*,
-  render::render_resource::{AsBindGroup, RenderPipelineDescriptor, SpecializedMeshPipelineError},
-  shader::ShaderRef,
 };
-use noise::{NoiseFn, Perlin};
-
-const CHUNK_SIZE: usize = 16;
-const CHUNK_SIZE_POW: usize = 5; // log2(32) = 5, plus 1 for first bit
-
-const SHADER_PATH: &str = "shaders/chunk.wgsl";
-const PREPASS_SHADER_PATH: &str = "shaders/chunk_prepass.wgsl";
 
 pub const DATA_ATTRIBUTE: MeshVertexAttribute =
   MeshVertexAttribute::new("Quad data", 658854091321, VertexFormat::Uint32);
 
-pub struct ChunkData {
-  chunk_pos: Vec2,
-  data: Vec<Vec<Vec<bool>>>,
-}
-
-impl ChunkData {
-  pub fn new() -> Self {
-    let seed = 42;
-    let chunk_coords = Vec2::ZERO;
-
-    let noise = Perlin::new(seed);
-    let mut hight_map = Vec::with_capacity(CHUNK_SIZE + 2);
-
-    for x in 0..CHUNK_SIZE + 2 {
-      let mut row = Vec::with_capacity(CHUNK_SIZE + 2);
-      for z in 0..CHUNK_SIZE + 2 {
-        let height = noise.get([
-          (chunk_coords.x as f64 * CHUNK_SIZE as f64 + x as f64) / 10.0,
-          (chunk_coords.y as f64 * CHUNK_SIZE as f64 + z as f64) / 10.0,
-        ]);
-        row.push(height.round());
-      }
-      hight_map.push(row);
-    }
-
-    let mut cube_map = vec![vec![vec![false; CHUNK_SIZE + 2]; CHUNK_SIZE + 2]; CHUNK_SIZE + 2];
-    for x in 0..CHUNK_SIZE + 2 {
-      for z in 0..CHUNK_SIZE + 2 {
-        let height = hight_map[x][z] as isize + (CHUNK_SIZE as isize / 2);
-        for y in 0..CHUNK_SIZE + 2 {
-          if (y as isize) <= height {
-            cube_map[x][y][z] = true;
-          }
-        }
-      }
-    }
-
-    Self {
-      chunk_pos: chunk_coords,
-      data: cube_map,
-    }
-  }
-
+impl ChunkBlockData {
   pub fn mesh(self) -> Mesh {
     let mut plain_data = Vec::new();
     let mut indices = Vec::new();
@@ -73,7 +20,7 @@ impl ChunkData {
       for y in 1..CHUNK_SIZE + 1 {
         for z in 1..CHUNK_SIZE + 1 {
           let pos = USizeVec3::new(x, y, z);
-          if !self.get(pos) {
+          if self.empty(pos) {
             continue;
           }
 
@@ -91,7 +38,7 @@ impl ChunkData {
             if neighbor_pos.x >= CHUNK_SIZE + 2
               || neighbor_pos.y >= CHUNK_SIZE + 2
               || neighbor_pos.z >= CHUNK_SIZE + 2
-              || !self.get(neighbor_pos)
+              || self.empty(neighbor_pos)
             {
               let (base, dir1, dir2) = match dir {
                 0 => (pos + USizeVec3::X, USizeVec3::Z, USizeVec3::Y),
@@ -159,53 +106,5 @@ impl ChunkData {
     mesh.insert_indices(Indices::U32(indices));
 
     mesh
-  }
-
-  pub fn get(&self, pos: USizeVec3) -> bool {
-    self.data[pos.x][pos.y][pos.z]
-  }
-}
-
-pub type ChunkMaterialPlugin = MaterialPlugin<ChunkMaterial>;
-
-#[derive(Resource)]
-pub struct ChunkMaterialHandle(pub Handle<ChunkMaterial>);
-
-#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
-pub struct ChunkMaterial {}
-
-impl Material for ChunkMaterial {
-  fn fragment_shader() -> ShaderRef {
-    SHADER_PATH.into()
-  }
-
-  fn vertex_shader() -> ShaderRef {
-    SHADER_PATH.into()
-  }
-
-  fn alpha_mode(&self) -> AlphaMode {
-    AlphaMode::Opaque
-  }
-
-  fn specialize(
-    _pipeline: &MaterialPipeline,
-    descriptor: &mut RenderPipelineDescriptor,
-    layout: &MeshVertexBufferLayoutRef,
-    _key: MaterialPipelineKey<Self>,
-  ) -> Result<(), SpecializedMeshPipelineError> {
-    let vertex_layout = layout
-      .0
-      .get_layout(&[DATA_ATTRIBUTE.at_shader_location(0)])?;
-
-    descriptor.vertex.buffers = vec![vertex_layout];
-    Ok(())
-  }
-
-  fn prepass_vertex_shader() -> ShaderRef {
-    PREPASS_SHADER_PATH.into()
-  }
-
-  fn prepass_fragment_shader() -> ShaderRef {
-    PREPASS_SHADER_PATH.into()
   }
 }

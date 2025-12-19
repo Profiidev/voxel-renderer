@@ -10,6 +10,6 @@ impl Plugin for VoxelPlugin {
   fn build(&self, app: &mut App) {
     app
       .add_systems(Startup, test)
-      .add_plugins(ChunkMaterialPlugin::default());
+      .add_plugins(ChunkMaterialPlugin);
   }
 }

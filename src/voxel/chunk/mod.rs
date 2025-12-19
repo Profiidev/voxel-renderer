@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 pub use material::ChunkMaterialPlugin;
 
-use crate::voxel::chunk::{generation::ChunkBlockData, material::ChunkMaterial};
+use crate::voxel::chunk::{
+  generation::ChunkBlockData,
+  material::{ChunkMaterial, InstanceData, InstanceMaterialData},
+};
 
 mod entity;
 mod generation;
@@ -18,12 +21,16 @@ pub fn test(
   query: Query<Entity, With<Marker>>,
   mut commands: Commands,
   mut meshes: ResMut<Assets<Mesh>>,
-  mut materials: ResMut<Assets<ChunkMaterial>>,
+  //mut materials: ResMut<Assets<ChunkMaterial>>,
 ) {
-  if let Ok(entity) = query.single() {
-    commands.entity(entity).despawn();
-  }
+  commands.spawn((
+    Mesh3d(meshes.add(Plane3d::default())),
+    Transform::from_translation(Vec3::new(0.0, 1.0, 0.0)),
+    InstanceMaterialData(vec![InstanceData { data: 42 }]),
+  ));
 
+  return;
+  /*
   for x in -10..10 {
     for z in -10..10 {
       for y in -2..=1 {
@@ -35,5 +42,5 @@ pub fn test(
         commands.spawn((Marker, mesh_entity));
       }
     }
-  }
+  }*/
 }

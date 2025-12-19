@@ -32,5 +32,6 @@ const normals: array<vec3<f32>,6> = array<vec3<f32>,6> (
 
 struct Vertex {
     @builtin(instance_index) instance_index: u32,
-    @location(0) data: u32,
+    @location(0) position: vec3<f32>,
+    @location(3) data: u32,
 };

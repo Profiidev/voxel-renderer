@@ -4612,6 +4612,7 @@ name = "voxel_rendering"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bytemuck",
  "noise",
 ]
 

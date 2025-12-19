@@ -9,7 +9,7 @@ pub struct VoxelPlugin;
 impl Plugin for VoxelPlugin {
   fn build(&self, app: &mut App) {
     app
-      .add_systems(Update, test)
+      .add_systems(Startup, test)
       .add_plugins(ChunkMaterialPlugin::default());
   }
 }

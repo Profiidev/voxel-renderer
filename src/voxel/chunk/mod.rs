@@ -9,7 +9,7 @@ mod material;
 mod mesh;
 
 const CHUNK_SIZE: usize = 16;
-const CHUNK_SIZE_POW: usize = 5; // log2(32) = 5, plus 1 for first bit
+const CHUNK_SIZE_POW: usize = 5; // log2(16) = 4, plus 1 for first bit
 
 #[derive(Component)]
 pub struct Marker;
@@ -24,10 +24,16 @@ pub fn test(
     commands.entity(entity).despawn();
   }
 
-  let chunk_pos = IVec3::new(0, 0, 0);
-  let mesh_entity = ChunkBlockData::create(42, chunk_pos)
-    .create_mesh()
-    .create_entity(&mut materials, &mut meshes, &mut commands);
+  for x in -10..10 {
+    for z in -10..10 {
+      for y in -2..=1 {
+        let chunk_pos = IVec3::new(x, y, z);
+        let mesh_entity = ChunkBlockData::create(0, chunk_pos)
+          .create_mesh()
+          .create_entity(&mut materials, &mut meshes);
 
-  commands.spawn((Marker, mesh_entity));
+        commands.spawn((Marker, mesh_entity));
+      }
+    }
+  }
 }

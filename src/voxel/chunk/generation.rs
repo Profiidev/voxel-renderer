@@ -15,9 +15,9 @@ impl ChunkBlockData {
     for (x, row) in height_map.iter_mut().enumerate() {
       for (z, cell) in row.iter_mut().enumerate() {
         let height = noise.get([
-          (chunk_pos.x as f64 * CHUNK_SIZE as f64 + x as f64) / 10.0,
-          (chunk_pos.z as f64 * CHUNK_SIZE as f64 + z as f64) / 10.0,
-        ]);
+          (chunk_pos.x as f64 * CHUNK_SIZE as f64 + x as f64) / 50.0,
+          (chunk_pos.z as f64 * CHUNK_SIZE as f64 + z as f64) / 50.0,
+        ]) * 20.0;
         *cell = height;
       }
     }
@@ -26,9 +26,8 @@ impl ChunkBlockData {
 
     for (x, row) in height_map.iter().enumerate() {
       for (z, cell) in row.iter().enumerate() {
-        let height = cell.round() as isize + (CHUNK_SIZE as isize / 2);
         for y in 0..CHUNK_SIZE + 2 {
-          if (y as isize) <= height {
+          if (y as i32 + (chunk_pos.y * CHUNK_SIZE as i32)) <= cell.round() as i32 {
             let index = get_index(x, y, z);
             data[index] = 1;
           }

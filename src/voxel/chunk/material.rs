@@ -12,10 +12,6 @@ const SHADER_PATH: &str = "shaders/chunk.wgsl";
 const PREPASS_SHADER_PATH: &str = "shaders/chunk_prepass.wgsl";
 pub type ChunkMaterialPlugin = MaterialPlugin<ChunkMaterial>;
 
-#[derive(Resource)]
-#[allow(unused)]
-pub struct ChunkMaterialHandle(pub(super) Handle<ChunkMaterial>);
-
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct ChunkMaterial {}
 
